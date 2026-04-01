@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.formpproxy.nova.repositories
+package uk.gov.hmrc.formpproxy.nova.models
 
-object NovaStoredProcedures {
-  val CallGetAllTraderClientDetails = "{ call VAT_DC_PK.getAllTraderClientDetails(?, ?, ?, ?, ?, ?, ?, ?) }"
-  val CallGetTraderInformation      = "{ call VAT_DC_PK.getTraderInformation(?, ?, ?) }"
+import play.api.libs.json.{Json, OFormat}
+
+case class TraderResponse(
+  userTrader: Option[TraderDetails],
+  clientTrader: Option[TraderDetails]
+)
+
+object TraderResponse {
+  implicit val format: OFormat[TraderResponse] = Json.format[TraderResponse]
 }

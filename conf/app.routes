@@ -77,3 +77,8 @@ POST       /filing/update/return-info                               uk.gov.hmrc.
 
 GET        /charities/:charityReference/unregulated-donations       uk.gov.hmrc.formpproxy.charities.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
 POST       /charities/:charityReference/unregulated-donations       uk.gov.hmrc.formpproxy.charities.controllers.UnregulatedDonationsController.saveUnregulatedDonation(charityReference: String)
+
+# NOVA routes
+
+GET        /nova/trader                                              uk.gov.hmrc.formpproxy.nova.controllers.NovaTraderController.getTraderDetails(userVrn: String, clientVrn: Option[String])
+GET        /nova/trader-information                                  uk.gov.hmrc.formpproxy.nova.controllers.NovaTraderController.getTraderInformation(vrn: String, gracePeriod: Option[Int])
