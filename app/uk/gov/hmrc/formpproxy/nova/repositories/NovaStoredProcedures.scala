@@ -25,4 +25,7 @@ object NovaStoredProcedures {
   val CallGetClientsByNameStart     = "{ call NOVA_CLIENT_SEARCH.getClientsByNameStart(?, ?, ?, ?, ?, ?, ?, ?, ?) }"
   val CallHasClient                 = "{ call NOVA_CLIENT_SEARCH.hasClient(?, ?, ?) }"
   val CallGetClientListStatus       = "{ call CLIENT_LIST_STATUS.getClientListDownloadStatus(?, ?, ?, ?) }"
+  val CallGetVehicleStatusDetails   = "{ call NOVA_FILING_APP.getVehicleStatusDetails(?, ?) }"
+  val CallGetVehicleCalculationData =
+    "{ call NOVA_FILING_APP.getVehicleCalculationData2(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }"
 }

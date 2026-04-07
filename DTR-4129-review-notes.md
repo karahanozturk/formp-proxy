@@ -97,3 +97,22 @@ Notes:
   - otherwise all clients
 - `getClientByVrn` returns `totalCount` based on the number of rows returned, matching the AS-IS client search handling
 - `clientNameStartingCharacters` follows the stored procedures and AS-IS behavior, using the letters available for the credential rather than narrowing them to the current filtered result set
+
+## Step 4
+
+Included commit(s): `DTR-4129 Add NoVA vehicle endpoints`
+Scope:
+- `GET /nova/vehicle-status`
+- `GET /nova/vehicle-calculation-data`
+
+References used:
+- `DTR-4129`
+- I3 - RDS DataCache Proxy Microservice - NoVA
+- AS-IS NoVA repo
+- prh-oracle-xe repo
+
+Notes:
+- `getVehicleStatusDetails` returns the raw Oracle cursor values for `status` ("secured"/"unsecured"/null) and `origin` (lowercase string), unlike the AS-IS Java which converts these to booleans (`secured`, `imported`). The proxy is a thin translation layer — nova-imports can interpret the raw values as needed.
+- `getVehicleCalculationData2` has 17 parameters (4 IN + 13 OUT). OUT parameter types verified against AS-IS Java SP wrapper: `p_threshold_days` and `p_max_no_of_days` are `OracleTypes.INTEGER` (nullable), all other numbers are `OracleTypes.NUMBER`, all dates are `OracleTypes.DATE`.
+- `invoiceDate` and `arrivalDate` are parsed as ISO-8601 date strings and converted to `java.sql.Date` for Oracle. Invalid dates return 400.
+- VIN is not logged (PII).

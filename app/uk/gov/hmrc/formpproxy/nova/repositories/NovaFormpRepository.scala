@@ -57,6 +57,13 @@ trait NovaSource {
   ): Future[ClientListResponse]
   def getClientListStatus(credentialId: String, serviceName: String, gracePeriod: Int): Future[Int]
   def hasClient(credentialId: String, vrn: String): Future[Boolean]
+  def getVehicleStatusDetails(vin: String): Future[Option[VehicleStatus]]
+  def getVehicleCalculationData(
+    fromCurrency: String,
+    toCurrency: String,
+    invoiceDate: java.sql.Date,
+    arrivalDate: java.sql.Date
+  ): Future[VehicleCalculationData]
 }
 
 @Singleton
@@ -268,6 +275,72 @@ class NovaFormpRepository @Inject() (@NamedDatabase("nova") db: Database)(implic
           cs.registerOutParameter(3, OracleTypes.NUMBER)
           cs.execute()
           cs.getInt(3) > 0
+        }
+      }
+    }
+  }
+
+  override def getVehicleStatusDetails(vin: String): Future[Option[VehicleStatus]] = {
+    logger.info("[NOVA] getVehicleStatusDetails")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetVehicleStatusDetails)) { cs =>
+          cs.setString(1, vin)
+          cs.registerOutParameter(2, OracleTypes.CURSOR)
+          cs.execute()
+
+          val rs = cs.getObject(2).asInstanceOf[ResultSet]
+          if (rs != null && rs.next()) Some(NovaRowMappers.readVehicleStatus(rs))
+          else None
+        }
+      }
+    }
+  }
+
+  override def getVehicleCalculationData(
+    fromCurrency: String,
+    toCurrency: String,
+    invoiceDate: java.sql.Date,
+    arrivalDate: java.sql.Date
+  ): Future[VehicleCalculationData] = {
+    logger.info("[NOVA] getVehicleCalculationData")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetVehicleCalculationData)) { cs =>
+          cs.setString(1, fromCurrency)
+          cs.setString(2, toCurrency)
+          cs.setDate(3, invoiceDate)
+          cs.setDate(4, arrivalDate)
+          cs.registerOutParameter(5, OracleTypes.NUMBER)
+          cs.registerOutParameter(6, OracleTypes.DATE)
+          cs.registerOutParameter(7, OracleTypes.NUMBER)
+          cs.registerOutParameter(8, OracleTypes.DATE)
+          cs.registerOutParameter(9, OracleTypes.NUMBER)
+          cs.registerOutParameter(10, OracleTypes.DATE)
+          cs.registerOutParameter(11, OracleTypes.INTEGER)
+          cs.registerOutParameter(12, OracleTypes.DATE)
+          cs.registerOutParameter(13, OracleTypes.NUMBER)
+          cs.registerOutParameter(14, OracleTypes.DATE)
+          cs.registerOutParameter(15, OracleTypes.INTEGER)
+          cs.registerOutParameter(16, OracleTypes.DATE)
+          cs.registerOutParameter(17, OracleTypes.NUMBER)
+          cs.execute()
+
+          VehicleCalculationData(
+            exchangeRate = Option(cs.getBigDecimal(5)).map(BigDecimal(_)),
+            vatRateEffectiveDate = Option(cs.getDate(6)).map(_.toLocalDate.toString),
+            vatRate = Option(cs.getBigDecimal(7)).map(BigDecimal(_)),
+            minLimitEffDate = Option(cs.getDate(8)).map(_.toLocalDate.toString),
+            minLimitAmount = Option(cs.getBigDecimal(9)).map(BigDecimal(_)),
+            thresholdDaysEffDate = Option(cs.getDate(10)).map(_.toLocalDate.toString),
+            thresholdDays = { val v = cs.getInt(11); if (cs.wasNull()) None else Some(v) },
+            rateEffDate = Option(cs.getDate(12)).map(_.toLocalDate.toString),
+            rateAmount = Option(cs.getBigDecimal(13)).map(BigDecimal(_)),
+            maxNoOfDaysEffDate = Option(cs.getDate(14)).map(_.toLocalDate.toString),
+            maxNoOfDays = { val v = cs.getInt(15); if (cs.wasNull()) None else Some(v) },
+            altAmtEffDate = Option(cs.getDate(16)).map(_.toLocalDate.toString),
+            altAmt = Option(cs.getBigDecimal(17)).map(BigDecimal(_))
+          )
         }
       }
     }

@@ -16,12 +16,25 @@
 
 package uk.gov.hmrc.formpproxy.nova.repositories
 
-import uk.gov.hmrc.formpproxy.nova.models.{Client, TraderDetails, TraderInformation}
+import uk.gov.hmrc.formpproxy.nova.models.{Client, TraderDetails, TraderInformation, VehicleStatus}
 import uk.gov.hmrc.formpproxy.shared.utils.ResultSetUtils.*
 
 import java.sql.ResultSet
 
 object NovaRowMappers {
+
+  def readVehicleStatus(rs: ResultSet): VehicleStatus =
+    VehicleStatus(
+      vin = rs.getString("p_vin"),
+      novaRef = rs.getOptionalString("p_nova_ref"),
+      make = rs.getOptionalString("p_make"),
+      model = rs.getOptionalString("p_model"),
+      mileage = rs.getOptionalInt("p_mileage"),
+      firstRegDate = Option(rs.getDate("p_first_reg_date")).map(_.toLocalDate.toString),
+      status = rs.getOptionalString("p_status"),
+      restrictionDate = Option(rs.getDate("p_restriction_date")).map(_.toLocalDate.toString),
+      origin = rs.getOptionalString("p_origin")
+    )
 
   def readClient(rs: ResultSet): Client =
     Client(
