@@ -82,3 +82,7 @@ POST       /charities/:charityReference/unregulated-donations       uk.gov.hmrc.
 
 GET        /nova/trader                                              uk.gov.hmrc.formpproxy.nova.controllers.NovaTraderController.getTraderDetails(userVrn: String, clientVrn: Option[String])
 GET        /nova/trader-information                                  uk.gov.hmrc.formpproxy.nova.controllers.NovaTraderController.getTraderInformation(vrn: String, gracePeriod: Option[Int])
+GET        /nova/client-list                                         uk.gov.hmrc.formpproxy.nova.controllers.NovaClientController.getClientList(credentialId: String, start: Option[Int], count: Option[Int], sort: Option[Int], ascending: Option[Boolean])
+GET        /nova/client-list-status                                  uk.gov.hmrc.formpproxy.nova.controllers.NovaClientController.getClientListStatus(credentialId: String, serviceName: String, gracePeriod: Option[Int])
+GET        /nova/client-search                                       uk.gov.hmrc.formpproxy.nova.controllers.NovaClientController.searchClients(credentialId: String, vrn: Option[String], name: Option[String], nameStart: Option[String], start: Option[Int], count: Option[Int], sort: Option[Int], ascending: Option[Boolean])
+GET        /nova/has-client                                          uk.gov.hmrc.formpproxy.nova.controllers.NovaClientController.hasClient(credentialId: String, vrn: String)

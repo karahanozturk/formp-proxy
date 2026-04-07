@@ -16,12 +16,21 @@
 
 package uk.gov.hmrc.formpproxy.nova.repositories
 
-import uk.gov.hmrc.formpproxy.nova.models.{TraderDetails, TraderInformation}
+import uk.gov.hmrc.formpproxy.nova.models.{Client, TraderDetails, TraderInformation}
 import uk.gov.hmrc.formpproxy.shared.utils.ResultSetUtils.*
 
 import java.sql.ResultSet
 
 object NovaRowMappers {
+
+  def readClient(rs: ResultSet): Client =
+    Client(
+      name = rs.getOptionalString("CLIENT_NAME").map(_.trim).getOrElse(""),
+      vatRegistrationNumber = rs.getOptionalString("VAT_REG_NUMBER").map(_.trim).getOrElse("")
+    )
+
+  def readClientNameStartingCharacter(rs: ResultSet): Option[String] =
+    rs.getOptionalString("CLIENTNAMESTARTINGCHARACTER").map(_.trim).filter(_.nonEmpty)
 
   def readTraderInfo(rs: ResultSet, vrn: String): TraderDetails =
     TraderDetails(

@@ -27,7 +27,7 @@ Source selection used on this branch:
 
 ## Step 1
 
-Included commit(s): `6534bc3`  
+Included commit(s): `DTR-4129 Add module for NoVA and update configuration`  
 
 Summary:
 - module scaffolding and configuration for NoVA support in `formp-proxy`
@@ -48,7 +48,7 @@ Notes:
 
 ## Step 2
 
-Included commit(s): current Step 2 trader endpoints commit on this branch  
+Included commit(s): `DTR-4129 Add NoVA trader endpoints`  
 Scope:
 - `GET /nova/trader`
 - `GET /nova/trader-information`
@@ -70,3 +70,30 @@ Notes:
   - I3 names `NOVA_FILING_APP.getTraderInformation`
   - AS-IS NoVA uses `VAT_DC_PK.getTraderInformation`
   - the implementation follows the AS-IS path here
+
+## Step 3
+
+Included commit(s): `DTR-4129 Add NoVA client endpoints`  
+Scope:
+- `GET /nova/client-list`
+- `GET /nova/client-list-status`
+- `GET /nova/client-search`
+- `GET /nova/has-client`
+
+References used:
+- `DTR-4129`
+- I3 - RDS DataCache Proxy Microservice - NoVA
+- NoVA - Database Stored Procedures
+- AS-IS NoVA repo
+- prh-oracle-xe repo
+
+Notes:
+- defaults for list and search follow I3: `start=0`, `count=-1`, `sort=0`, `ascending=true`
+- default `gracePeriod` for `client-list-status` follows I3: `14400`
+- client search routing follows the AS-IS service order:
+  - `vrn`
+  - `name`
+  - `nameStart`
+  - otherwise all clients
+- `getClientByVrn` returns `totalCount` based on the number of rows returned, matching the AS-IS client search handling
+- `clientNameStartingCharacters` follows the stored procedures and AS-IS behavior, using the letters available for the credential rather than narrowing them to the current filtered result set

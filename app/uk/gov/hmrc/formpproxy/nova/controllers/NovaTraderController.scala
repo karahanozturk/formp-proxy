@@ -40,9 +40,11 @@ class NovaTraderController @Inject() (
     authorise.async { implicit request =>
       (for {
         parsedUserVrn   <- Try(userVrn.toLong).toEither.left.map(_ => "Invalid userVrn")
-        parsedClientVrn <- clientVrn.map(v => Try(v.toLong).toEither.left.map(_ => "Invalid clientVrn").map(Some(_))).getOrElse(Right(None))
+        parsedClientVrn <- clientVrn
+                             .map(v => Try(v.toLong).toEither.left.map(_ => "Invalid clientVrn").map(Some(_)))
+                             .getOrElse(Right(None))
       } yield (parsedUserVrn, parsedClientVrn)) match {
-        case Left(error) =>
+        case Left(error)                             =>
           scala.concurrent.Future.successful(BadRequest(Json.obj("message" -> error)))
         case Right((parsedUserVrn, parsedClientVrn)) =>
           service
@@ -58,14 +60,15 @@ class NovaTraderController @Inject() (
   def getTraderInformation(vrn: String, gracePeriod: Option[Int]): Action[AnyContent] =
     authorise.async { implicit request =>
       Try(vrn.toLong).toOption match {
-        case None =>
+        case None            =>
           scala.concurrent.Future.successful(BadRequest(Json.obj("message" -> "Invalid vrn")))
         case Some(parsedVrn) =>
           service
             .getTraderInformation(parsedVrn, gracePeriod)
             .map {
               case Some(trader) => Ok(Json.toJson(trader))
-              case None         => NotFound(Json.obj("code" -> "TRADER_NOT_FOUND", "message" -> s"No trader found for VRN $vrn"))
+              case None         =>
+                NotFound(Json.obj("code" -> "TRADER_NOT_FOUND", "message" -> s"No trader found for VRN $vrn"))
             }
             .recover { case t: Throwable =>
               logger.error("[getTraderInformation] failed", t)

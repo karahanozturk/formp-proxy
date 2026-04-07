@@ -31,6 +31,32 @@ import scala.util.Using
 trait NovaSource {
   def getAllTraderClientDetails(userVrn: Long, clientVrn: Option[Long]): Future[TraderResponse]
   def getTraderInformation(vrn: Long, gracePeriod: Option[Int]): Future[Option[TraderInformation]]
+  def getAllClients(
+    credentialId: String,
+    start: Int,
+    count: Int,
+    sort: Int,
+    ascending: Boolean
+  ): Future[ClientListResponse]
+  def getClientByVrn(credentialId: String, vrn: String): Future[ClientListResponse]
+  def getClientsByName(
+    credentialId: String,
+    name: String,
+    start: Int,
+    count: Int,
+    sort: Int,
+    ascending: Boolean
+  ): Future[ClientListResponse]
+  def getClientsByNameStart(
+    credentialId: String,
+    nameStart: String,
+    start: Int,
+    count: Int,
+    sort: Int,
+    ascending: Boolean
+  ): Future[ClientListResponse]
+  def getClientListStatus(credentialId: String, serviceName: String, gracePeriod: Int): Future[Int]
+  def hasClient(credentialId: String, vrn: String): Future[Boolean]
 }
 
 @Singleton
@@ -98,6 +124,155 @@ class NovaFormpRepository @Inject() (@NamedDatabase("nova") db: Database)(implic
     }
   }
 
+  override def getAllClients(
+    credentialId: String,
+    start: Int,
+    count: Int,
+    sort: Int,
+    ascending: Boolean
+  ): Future[ClientListResponse] = {
+    logger.info("[NOVA] getAllClients")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetAllClients)) { cs =>
+          cs.setString(1, credentialId)
+          cs.setInt(2, start)
+          cs.setInt(3, count)
+          cs.setInt(4, sort)
+          cs.setString(5, sortOrder(ascending))
+          cs.registerOutParameter(6, OracleTypes.NUMBER)
+          cs.registerOutParameter(7, OracleTypes.CURSOR)
+          cs.registerOutParameter(8, OracleTypes.CURSOR)
+          cs.execute()
+
+          readClientListResponse(
+            Some(cs.getInt(6)),
+            cs.getObject(7).asInstanceOf[ResultSet],
+            cs.getObject(8).asInstanceOf[ResultSet]
+          )
+        }
+      }
+    }
+  }
+
+  override def getClientByVrn(credentialId: String, vrn: String): Future[ClientListResponse] = {
+    logger.info("[NOVA] getClientByVrn")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetClientByVrn)) { cs =>
+          cs.setString(1, credentialId)
+          cs.setString(2, vrn)
+          cs.registerOutParameter(3, OracleTypes.CURSOR)
+          cs.registerOutParameter(4, OracleTypes.CURSOR)
+          cs.execute()
+
+          readClientListResponse(
+            None,
+            cs.getObject(3).asInstanceOf[ResultSet],
+            cs.getObject(4).asInstanceOf[ResultSet]
+          )
+        }
+      }
+    }
+  }
+
+  override def getClientsByName(
+    credentialId: String,
+    name: String,
+    start: Int,
+    count: Int,
+    sort: Int,
+    ascending: Boolean
+  ): Future[ClientListResponse] = {
+    logger.info("[NOVA] getClientsByName")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetClientsByName)) { cs =>
+          cs.setString(1, credentialId)
+          cs.setString(2, name)
+          cs.setInt(3, start)
+          cs.setInt(4, count)
+          cs.setInt(5, sort)
+          cs.setString(6, sortOrder(ascending))
+          cs.registerOutParameter(7, OracleTypes.NUMBER)
+          cs.registerOutParameter(8, OracleTypes.CURSOR)
+          cs.registerOutParameter(9, OracleTypes.CURSOR)
+          cs.execute()
+
+          readClientListResponse(
+            Some(cs.getInt(7)),
+            cs.getObject(8).asInstanceOf[ResultSet],
+            cs.getObject(9).asInstanceOf[ResultSet]
+          )
+        }
+      }
+    }
+  }
+
+  override def getClientsByNameStart(
+    credentialId: String,
+    nameStart: String,
+    start: Int,
+    count: Int,
+    sort: Int,
+    ascending: Boolean
+  ): Future[ClientListResponse] = {
+    logger.info("[NOVA] getClientsByNameStart")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetClientsByNameStart)) { cs =>
+          cs.setString(1, credentialId)
+          cs.setString(2, nameStart)
+          cs.setInt(3, start)
+          cs.setInt(4, count)
+          cs.setInt(5, sort)
+          cs.setString(6, sortOrder(ascending))
+          cs.registerOutParameter(7, OracleTypes.NUMBER)
+          cs.registerOutParameter(8, OracleTypes.CURSOR)
+          cs.registerOutParameter(9, OracleTypes.CURSOR)
+          cs.execute()
+
+          readClientListResponse(
+            Some(cs.getInt(7)),
+            cs.getObject(8).asInstanceOf[ResultSet],
+            cs.getObject(9).asInstanceOf[ResultSet]
+          )
+        }
+      }
+    }
+  }
+
+  override def getClientListStatus(credentialId: String, serviceName: String, gracePeriod: Int): Future[Int] = {
+    logger.info("[NOVA] getClientListStatus")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetClientListStatus)) { cs =>
+          cs.setString(1, credentialId)
+          cs.setString(2, serviceName)
+          cs.setInt(3, gracePeriod)
+          cs.registerOutParameter(4, OracleTypes.NUMBER)
+          cs.execute()
+          cs.getInt(4)
+        }
+      }
+    }
+  }
+
+  override def hasClient(credentialId: String, vrn: String): Future[Boolean] = {
+    logger.info("[NOVA] hasClient")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallHasClient)) { cs =>
+          cs.setString(1, credentialId)
+          cs.setString(2, vrn)
+          cs.registerOutParameter(3, OracleTypes.NUMBER)
+          cs.execute()
+          cs.getInt(3) > 0
+        }
+      }
+    }
+  }
+
   private def readTraderFromCursors(
     vrn: String,
     traderInfoRs: ResultSet,
@@ -119,4 +294,34 @@ class NovaFormpRepository @Inject() (@NamedDatabase("nova") db: Database)(implic
 
       Some(withDetails)
     }
+
+  private def readClientListResponse(
+    totalCount: Option[Int],
+    clientListRs: ResultSet,
+    clientNameCharsRs: ResultSet
+  ): ClientListResponse = {
+    val clients = readClients(clientListRs)
+    ClientListResponse(
+      clients = clients,
+      totalCount = totalCount.getOrElse(clients.size),
+      clientNameStartingCharacters = readClientNameStartingCharacters(clientNameCharsRs)
+    )
+  }
+
+  private def readClients(rs: ResultSet): Seq[Client] =
+    Iterator
+      .continually(rs)
+      .takeWhile(resultSet => resultSet != null && resultSet.next())
+      .map(NovaRowMappers.readClient)
+      .toSeq
+
+  private def readClientNameStartingCharacters(rs: ResultSet): Seq[String] =
+    Iterator
+      .continually(rs)
+      .takeWhile(resultSet => resultSet != null && resultSet.next())
+      .flatMap(NovaRowMappers.readClientNameStartingCharacter)
+      .toSeq
+
+  private def sortOrder(ascending: Boolean): String =
+    if (ascending) "ASC" else "DESC"
 }
