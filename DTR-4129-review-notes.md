@@ -116,3 +116,22 @@ Notes:
 - `getVehicleCalculationData2` has 17 parameters (4 IN + 13 OUT). OUT parameter types verified against AS-IS Java SP wrapper: `p_threshold_days` and `p_max_no_of_days` are `OracleTypes.INTEGER` (nullable), all other numbers are `OracleTypes.NUMBER`, all dates are `OracleTypes.DATE`.
 - `invoiceDate` and `arrivalDate` are parsed as ISO-8601 date strings and converted to `java.sql.Date` for Oracle. Invalid dates return 400.
 - VIN is not logged (PII).
+
+## Step 5
+
+Included commit(s): `DTR-4129 Add NoVA reference data endpoints`
+Scope:
+- `GET /nova/eu-member-states`
+- `GET /nova/nvra-known-facts`
+
+References used:
+- `DTR-4129`
+- I3 - RDS DataCache Proxy Microservice - NoVA
+- AS-IS NoVA repo
+- prh-oracle-xe repo
+
+Notes:
+- `getEuMemberStates` returns all rows from the cursor without filtering. The AS-IS Java filters to current EU members (joining date != null, leaving date == null) plus Croatia. That filtering is business logic for nova-imports, not the proxy.
+- cursor column `p_coutry_desc` preserves the typo in the Oracle SP — the JSON response maps it to `countryDescription`
+- `retrieveNVRA_KnownFacts` uses 1 IN + 10 OUT params (all VARCHAR), verified against Oracle package definition and AS-IS Java `RetrieveNvraKnownFactsSP`. Always returns 200; consumer checks `resultCode` ("000" = found, "001" = not found).
+- the AS-IS Java `RetrieveNvraKnownFactsSP` does not read `out_abroad_flag` or `out_result_code` into its DTO. The proxy includes both in the response to match the I3 wiki spec.

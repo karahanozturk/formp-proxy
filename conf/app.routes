@@ -88,3 +88,5 @@ GET        /nova/client-search                                       uk.gov.hmrc
 GET        /nova/has-client                                          uk.gov.hmrc.formpproxy.nova.controllers.NovaClientController.hasClient(credentialId: String, vrn: String)
 GET        /nova/vehicle-status                                      uk.gov.hmrc.formpproxy.nova.controllers.NovaVehicleController.getVehicleStatusDetails(vin: String)
 GET        /nova/vehicle-calculation-data                             uk.gov.hmrc.formpproxy.nova.controllers.NovaVehicleController.getVehicleCalculationData(fromCurrency: String, toCurrency: String, invoiceDate: String, arrivalDate: String)
+GET        /nova/eu-member-states                                    uk.gov.hmrc.formpproxy.nova.controllers.NovaReferenceDataController.getEuMemberStates()
+GET        /nova/nvra-known-facts                                    uk.gov.hmrc.formpproxy.nova.controllers.NovaReferenceDataController.getNvraKnownFacts(nvraRefNumber: String)

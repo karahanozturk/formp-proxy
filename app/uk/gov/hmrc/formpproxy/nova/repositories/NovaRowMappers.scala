@@ -16,12 +16,21 @@
 
 package uk.gov.hmrc.formpproxy.nova.repositories
 
-import uk.gov.hmrc.formpproxy.nova.models.{Client, TraderDetails, TraderInformation, VehicleStatus}
+import uk.gov.hmrc.formpproxy.nova.models.{Client, EuMemberState, TraderDetails, TraderInformation, VehicleStatus}
 import uk.gov.hmrc.formpproxy.shared.utils.ResultSetUtils.*
 
 import java.sql.ResultSet
 
 object NovaRowMappers {
+
+  def readEuMemberState(rs: ResultSet): EuMemberState =
+    EuMemberState(
+      countryCode = rs.getString("p_country_code"),
+      countryDescription = rs.getOptionalString("p_coutry_desc"),
+      euJoiningDate = Option(rs.getDate("p_eu_joining_date")).map(_.toLocalDate.toString),
+      euLeavingDate = Option(rs.getDate("p_eu_leaving_date")).map(_.toLocalDate.toString),
+      euAccessionaryDate = Option(rs.getDate("p_eu_accessionary_date")).map(_.toLocalDate.toString)
+    )
 
   def readVehicleStatus(rs: ResultSet): VehicleStatus =
     VehicleStatus(

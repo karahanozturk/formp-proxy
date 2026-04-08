@@ -64,6 +64,8 @@ trait NovaSource {
     invoiceDate: java.sql.Date,
     arrivalDate: java.sql.Date
   ): Future[VehicleCalculationData]
+  def getEuMemberStates(): Future[Seq[EuMemberState]]
+  def retrieveNvraKnownFacts(nvraRefNumber: String): Future[NvraKnownFacts]
 }
 
 @Singleton
@@ -340,6 +342,60 @@ class NovaFormpRepository @Inject() (@NamedDatabase("nova") db: Database)(implic
             maxNoOfDays = { val v = cs.getInt(15); if (cs.wasNull()) None else Some(v) },
             altAmtEffDate = Option(cs.getDate(16)).map(_.toLocalDate.toString),
             altAmt = Option(cs.getBigDecimal(17)).map(BigDecimal(_))
+          )
+        }
+      }
+    }
+  }
+
+  override def getEuMemberStates(): Future[Seq[EuMemberState]] = {
+    logger.info("[NOVA] getEuMemberStates")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallGetEuMemberStates)) { cs =>
+          cs.registerOutParameter(1, OracleTypes.CURSOR)
+          cs.execute()
+
+          val rs = cs.getObject(1).asInstanceOf[ResultSet]
+          Iterator
+            .continually(rs)
+            .takeWhile(r => r != null && r.next())
+            .map(NovaRowMappers.readEuMemberState)
+            .toSeq
+        }
+      }
+    }
+  }
+
+  override def retrieveNvraKnownFacts(nvraRefNumber: String): Future[NvraKnownFacts] = {
+    logger.info("[NOVA] retrieveNvraKnownFacts")
+    Future {
+      db.withConnection { conn =>
+        Using.resource(conn.prepareCall(NovaStoredProcedures.CallRetrieveNvraKnownFacts)) { cs =>
+          cs.setString(1, nvraRefNumber)
+          cs.registerOutParameter(2, OracleTypes.VARCHAR)
+          cs.registerOutParameter(3, OracleTypes.VARCHAR)
+          cs.registerOutParameter(4, OracleTypes.VARCHAR)
+          cs.registerOutParameter(5, OracleTypes.VARCHAR)
+          cs.registerOutParameter(6, OracleTypes.VARCHAR)
+          cs.registerOutParameter(7, OracleTypes.VARCHAR)
+          cs.registerOutParameter(8, OracleTypes.VARCHAR)
+          cs.registerOutParameter(9, OracleTypes.VARCHAR)
+          cs.registerOutParameter(10, OracleTypes.VARCHAR)
+          cs.registerOutParameter(11, OracleTypes.VARCHAR)
+          cs.execute()
+
+          NvraKnownFacts(
+            nvraRefNumber = Option(cs.getString(2)),
+            agentName = Option(cs.getString(3)),
+            addressLine1 = Option(cs.getString(4)),
+            addressLine2 = Option(cs.getString(5)),
+            addressLine3 = Option(cs.getString(6)),
+            addressLine4 = Option(cs.getString(7)),
+            addressLine5 = Option(cs.getString(8)),
+            postcode = Option(cs.getString(9)),
+            abroadFlag = Option(cs.getString(10)),
+            resultCode = Option(cs.getString(11)).getOrElse("001")
           )
         }
       }

@@ -28,4 +28,6 @@ object NovaStoredProcedures {
   val CallGetVehicleStatusDetails   = "{ call NOVA_FILING_APP.getVehicleStatusDetails(?, ?) }"
   val CallGetVehicleCalculationData =
     "{ call NOVA_FILING_APP.getVehicleCalculationData2(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }"
+  val CallGetEuMemberStates         = "{ call NOVA_FILING_APP.getEuMemberStates(?) }"
+  val CallRetrieveNvraKnownFacts    = "{ call NVRA_CHRIS_PK.retrieveNVRA_KnownFacts(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }"
 }
